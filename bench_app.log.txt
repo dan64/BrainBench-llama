@@ -1,0 +1,548 @@
+[llama] starting 'turboquant' server: run_srv_turboquant_p8080.cmd
+$ python run_benchmark.py --testset v1 --model local-llama --model-name unsloth/qwen3.8-27b:Q3_K_XL --questions 1 --category 1 --runs 2 --no-judge
+17:24:53 [INFO] [testset=v1] Running 2 tasks (0 already complete) | 1 models × 1 questions × 2 runs
+17:25:39 [INFO] Scores saved to D:\PProjects\BrainBench\results\v1\scores.json
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[llama] server stopped
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Scores updated. Review the tables above.
+[exit code 0]
+Reasoning budget (local-llama): 512 token → config.yaml
+Reasoning budget (local-llama): 512 token → config.yaml
+Server OK — 16 model(s) available on http://127.0.0.1:8080/v1
+Reasoning budget (local-llama): 512 token → config.yaml
+Reasoning budget (local-llama): 8192 token → config.yaml
+Reasoning budget (local-llama): 512 token → config.yaml
+Reasoning budget (local-llama): 8192 token → config.yaml
+Reasoning budget (local-llama): 4096 token → config.yaml
+Server OK — 16 model(s) available on http://127.0.0.1:8080/v1
+Reasoning budget (local-llama): 512 token → config.yaml
+Reasoning budget (local-llama): 8192 token → config.yaml
+Reasoning budget (local-llama): 4096 token → config.yaml
+Server OK — 16 model(s) available on http://127.0.0.1:8080/v1
+Reasoning budget (local-llama): 1024 token → config.yaml
+Server OK — 17 model(s) available on http://127.0.0.1:8080/v1
+Reasoning budget (local-llama): 512 token → config.yaml
+Reasoning budget (local-llama): 8192 token → config.yaml
+Server OK — 17 model(s) available on http://127.0.0.1:8080/v1
+Reasoning budget (local-llama): 8192 token → config.yaml
+Server OK — 17 model(s) available on http://127.0.0.1:8080/v1

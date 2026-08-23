@@ -1,0 +1,135 @@
+models:
+  # ── Local model (llama-server) ─────────────────────────────────
+  # Start the server first:
+  #   llama-server -m /path/to/your-model.gguf
+  # It exposes an OpenAI-compatible API on http://127.0.0.1:8080/v1
+  # (no API key required). The `model_id` value is ignored by
+  # llama-server (it serves a single model); "local-model" is fine.
+  - name: local-llama
+    provider: openai_compatible
+    model_id: local-model
+    base_url: http://127.0.0.1:8080/v1
+    max_tokens: 8192   # keep modest: small models have limited context
+    # Cappa al thinking (llama-server b9982+, per-request: nessun flag di
+    # server e nessun restart). Quando il budget si esaurisce, llama-server
+    # inietta reasoning_budget_message e chiude la fase di ragionamento
+    # (soft stop), così la risposta è garantita entro max_tokens. Senza cappa
+    # il thinking può mangiare tutto il max_tokens e lasciare response_text
+    # vuoto (MEMORY.md, bug #8).
+    reasoning_budget_tokens: 8192
+    reasoning_budget_message: "\n\nOkay, I have enough information to answer.\n\n"
+    enabled: true
+
+  # ── Cloud models (disabled by default; set enabled: true to use) ──
+  - name: gpt-4o
+    provider: openai
+    model_id: gpt-4o
+    enabled: false
+
+  - name: gpt-4o-mini
+    provider: openai
+    model_id: gpt-4o-mini
+    enabled: false
+
+  - name: gpt-5.4
+    provider: openai
+    model_id: gpt-5.4
+    enabled: false
+
+  - name: gpt-5.4-thinking-high
+    provider: openai
+    model_id: gpt-5.4
+    reasoning_effort: high
+    max_tokens: 4096
+    enabled: false
+
+  - name: gpt-4.1
+    provider: openai
+    model_id: gpt-4.1
+    enabled: false
+
+  - name: o3-mini
+    provider: openai
+    model_id: o3-mini
+    enabled: false
+
+  - name: claude-sonnet-4
+    provider: anthropic
+    model_id: claude-sonnet-4-20250514
+    enabled: false
+
+  - name: claude-haiku-4.5
+    provider: anthropic
+    model_id: claude-haiku-4-5
+    enabled: false
+
+  - name: claude-sonnet-4.6
+    provider: anthropic
+    model_id: claude-sonnet-4-6
+    enabled: false
+
+  - name: claude-opus-4.6
+    provider: anthropic
+    model_id: claude-opus-4-6
+    enabled: false
+
+  - name: claude-opus-4.6-thinking
+    provider: anthropic
+    model_id: claude-opus-4-6
+    reasoning_effort: high
+    max_tokens: 8192
+    enabled: false
+
+  - name: gemini-2.5-flash
+    provider: google
+    model_id: gemini-2.5-flash
+    enabled: false
+
+  - name: gemini-2.5-pro
+    provider: google
+    model_id: gemini-2.5-pro
+    enabled: false
+
+  - name: llama-4-maverick
+    provider: openai_compatible
+    model_id: meta-llama/llama-4-maverick
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    enabled: false
+
+  - name: deepseek-r1
+    provider: openai_compatible
+    model_id: deepseek/deepseek-r1
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    enabled: false
+
+  - name: qwen3-235b
+    provider: openai_compatible
+    model_id: qwen/qwen3-235b-a22b
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    enabled: false
+
+# ── Judge (verifica delle risposte) ───────────────────────────────
+# Uses the SAME local model under test, via llama-server.
+# Caveat: self-judging is biased (a model tends to agree with its own
+# phrasing). To use a cloud judge instead, e.g.:
+#   judge:
+#     provider: anthropic
+#     model_id: claude-sonnet-4-6
+judge:
+  provider: openai_compatible
+  model_id: unsloth/qwen3.8-27b-mtp:Q3_K_XL
+  base_url: http://127.0.0.1:8080/v1
+  # Il judge è lo stesso modello reasoning xhigh: cappiamo anche il suo
+  # thinking (il giudizio è un semplice confronto; 1024 token bastano e
+  # lo tengono veloce).
+  reasoning_budget_tokens: 1024
+  reasoning_budget_message: "\n\nOkay, I have enough information to answer.\n\n"
+
+runs_per_question: 10
+max_concurrent_requests: 2   # keep low: a local server serializes on the GPU anyway
+max_tokens: 8192
+output_dir: results
+data_dir: data
