@@ -915,6 +915,11 @@ class App:
         """Append a line to the persistent log file (best effort)."""
         path = SERVER_LOG_PATH if server else APP_LOG_PATH
         try:
+            # The server can emit extra trailing newlines (blank lines); collapse
+            # them to a single newline and skip pure-blank lines.
+            line = line.rstrip("\r\n")
+            if not line:
+                return
             with path.open("a", encoding="utf-8") as f:
                 f.write(line + "\n")
         except Exception:

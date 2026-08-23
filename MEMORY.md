@@ -216,6 +216,7 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
 
 ## Convenzioni di lavoro
 - L'utente parla italiano, rispondere in italiano.
+- **Il progetto è sotto git** (branch `master`): ogni volta che serve ripristinare un file o controllare le modifiche fatte si usa git — `git status`, `git diff`, `git checkout -- <file>`, `git log --oneline`. I file tracciati sono coperti dai commit; per ripristinare un file al suo ultimo commit si usa `git checkout -- <file>` (o `git restore <file>`).
 - Mai reloadare il server llama.cpp per testare: usare il modello già carico
   (di solito `unsloth/qwen3.8-27b:Q3_K_XL`).
 - Per verificare che un campo per-request arrivi a llama-server: **probe A/B**
