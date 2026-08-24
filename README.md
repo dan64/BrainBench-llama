@@ -1,10 +1,52 @@
-# BrainBench
+# BrainBench (llama fork)
 
 **A benchmark exposing commonsense reasoning gaps in Large Language Models.**
 
 BrainBench is a dataset of 100 brainteaser questions spanning 20 failure categories, each targeting a specific reasoning trap that LLMs fall into. These questions are trivially easy for humans but systematically fool AI models that rely on surface-level heuristics instead of genuine reasoning.
 
 **Paper:** [BrainBench: Exposing the Commonsense Reasoning Gap in Large Language Models](paper/main.pdf)
+
+## This fork: GUI + local llama.cpp models
+
+This project is a fork of [Lomnus-ai/BrainBench](https://github.com/Lomnus-ai/BrainBench) that adds a graphical control panel and first-class support for benchmarking **local LLMs** served by llama.cpp's `llama-server` (OpenAI-compatible endpoint, no API key).
+
+**Main features:**
+
+- **One-click GUI (Windows).** Double-click `run_benchmark_gui.vbs` — no terminal involved (the VBS hides the console, keeps it open on error, closes it on success). It launches `benchmark/gui.py` (FreeSimpleGUI):
+
+  ![BrainBench GUI](BrainBench-llama_GUI.jpg)
+
+- **llama-server lifecycle from the GUI.** Start/stop `llama-server` (OpenAI-compatible endpoint on `127.0.0.1:8080`) and pick between **three server builds** — `ggml`, `turboquant`, `unsloth` — each backed by its own launch script in your llama.cpp folder (variant list and scripts are editable in `benchmark/gui_config.json` under `llama_versions`; the llama.cpp folder path is configurable in the GUI).
+- **Model discovery.** The GUI queries the local server (`GET /v1/models`) and lists the served GGUF models; pick one and run the benchmark with a single click. The **reasoning budget** (thinking-token cap, `reasoning_budget_tokens` in `benchmark/config.yaml`) is set from a dropdown and written to the config file live.
+- **Full run control.** Run benchmark / Judge only / Re-judge all / Check / Aggregate / Stop, with resume support, `--no-judge` (two-phase test-then-judge workflow), and questions/category/runs options persisted between sessions in `benchmark/gui_config.json`.
+- **Results at a glance.** Per-model scores and per-category accuracy tables (from `results/<testset>/scores.json`), raw responses per question, plus two log tabs (app log and llama-server console) that are also written to `bench_app.log.txt` / `bench_server.log.txt` in the project root for debugging.
+- **Answer verification** is performed by an LLM judge, which by default is the *same local model* under test (self-judge); the judge can be pointed at any cloud model in `benchmark/config.yaml`. See below for details.
+
+### Configuring the llama servers (`benchmark/gui_config.json`)
+
+The GUI launches `llama-server` via a **startup script you provide** (one per server build), placed in your llama.cpp folder. All of this is configured in `benchmark/gui_config.json`:
+
+```json
+{
+  "llama_folder": "D:\\Programs\\llama.cpp",
+  "llama_version": "unsloth",
+  "llama_versions": [
+    { "name": "ggml",       "script": "run_srv_ggml_p8080.cmd" },
+    { "name": "turboquant", "script": "run_srv_turboquant_p8080.cmd" },
+    { "name": "unsloth",    "script": "run_srv_unsloth_p8080.cmd" }
+  ]
+}
+```
+
+- `llama_folder` — path to the llama.cpp installation; each startup script must live in this folder (the GUI runs them from there).
+- `llama_versions` — list of `{"name": ..., "script": ...}` entries: `name` is what shows in the GUI combo, `script` is the `.cmd` file that starts `llama-server` on `127.0.0.1:8080` (OpenAI-compatible endpoint, no API key). **The first entry is the default variant.** To support a different build, add one entry and drop the matching `.cmd` script in `llama_folder` — the GUI picks it up on next start.
+- `llama_version` — currently selected variant. The GUI writes it automatically on change, so this key normally doesn't need manual editing.
+
+Script requirements: it must start the server on port **8080** and be a plain `.cmd`; the GUI runs a hidden copy with any trailing `pause` line stripped (otherwise a crashed server would look "running" forever in a hidden console), and streams its output to the *Server log* tab (errors in red).
+
+Client-side, the local endpoint is set in [`benchmark/config.yaml`](benchmark/config.yaml): `base_url: http://127.0.0.1:8080/v1` in the `local-llama` model entry and in the `judge:` block (when the judge is also local). If you run the server on another port, update both entries *and* the startup script.
+
+Everything in the original benchmark (CLI, dataset, judge, score aggregation) is preserved — the GUI is a thin wrapper around `run_benchmark.py` and `config.yaml`, so the two ways of running stay fully compatible.
 
 ## Key Results
 
@@ -171,16 +213,17 @@ python benchmark/run_benchmark.py --judge-only
 
 ## Project Structure
 
-## Project Structure
-
 ```
 BrainBench/
 ├── data/                    # Dataset (English + Chinese)
 ├── benchmark/               # Evaluation code
-│   ├── run_benchmark.py     # Main runner
+│   ├── run_benchmark.py     # Main runner (CLI)
+│   ├── gui.py               # GUI launcher (FreeSimpleGUI) — this fork
 │   ├── models.py            # Model API wrappers
 │   ├── judge.py             # LLM-based answer judge
 │   └── config.yaml          # Model configuration
+├── run_benchmark_gui.vbs    # Windows one-click launcher for the GUI — this fork
+├── run_benchmark_gui.cmd    # Console wrapper used by the .vbs — this fork
 ├── results/                 # Analysis report + plots
 ├── scripts/                 # Analysis & verification scripts
 └── paper/                   # LaTeX paper + PDF

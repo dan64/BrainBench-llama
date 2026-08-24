@@ -8,20 +8,30 @@ Benchmark per valutare LLM su "brain teasers" (domande a risposta multipla):
 un modello genera la risposta, un *judge* LLM (OpenAI) la giudica, i punteggi
 vengono aggregati in `scores.json`.
 
+È una fork di [Lomnus-ai/BrainBench](https://github.com/Lomnus-ai/BrainBench)
+(remote `upstream`); home del progetto: https://github.com/dan64/BrainBench-llama.
+Aggiunge una GUI (`benchmark/gui.py`, launcher
+`run_benchmark_gui.vbs`) e supporto completo ai modelli locali serviti da
+`llama-server` (build ggml/turboquant/unsloth). README.md (inglese) la
+documenta in cima: sezione fork + configurazione `gui_config.json`.
+
 ## Layout
 ```
 benchmark/
   run_benchmark.py   CLI principale (~640 righe)
   models.py          client OpenAI / OpenAI-compatibile (llama.cpp)
   judge.py           judge LLM + _extract_json
-  gui.py             GUI FreeSimpleGUI (~970 righe, untracked, non ancora committata)
+  gui.py             GUI FreeSimpleGUI (~970 righe)
   config.yaml        modelli, judge, run settings
-  gui_config.json    stato finestra GUI (dimensioni, colonne) — generato
+  gui_config.json    stato GUI (finestra, llama_folder/versions, opzioni run) — generato
 data/                brainteasers.json (v1, 100 domande = 20 categorie × 5) + varianti cinesi
 results/<testset>/
   raw/<modello_sanificato>/qNNN_runNN.json   risposte grezze
   scores.json                                       aggregazione
 scripts/             analyze_results.py, generate_analysis.py, verify_dataset.py
+run_benchmark_gui.vbs  launcher one-click GUI Windows (VBS, console nascosta)
+run_benchmark_gui.cmd  wrapper console usato dal .vbs (cd /d + python benchmark\gui.py)
+BrainBench-llama_GUI.jpg  screenshot GUI, embedded nel README.md
 ```
 
 ## Flusso dati e CLI (run_benchmark.py)
@@ -125,6 +135,21 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
 - `.env` in radice per le chiavi API (guardare `.env.example`).
 
 ## Stato attuale (lasciato così alla chiusura della sessione)
+- **README fork** (2026-08-23): titolo `# BrainBench (llama fork)`; in cima la
+  sezione `## This fork: GUI + local llama.cpp models` con le principali
+  caratteristiche (one-click GUI, start/stop llama-server dalla GUI con build
+  ggml/turboquant/unsloth, discovery GGUF, reasoning budget, Run/Judge/
+  Re-judge/Check/Aggregate/Stop, tabelle risultati + 2 tab log, self-judge)
+  e screenshot embedded `BrainBench-llama_GUI.jpg` (path relativo alla radice
+  → GitHub la risolve su `main`). Sottosezione `### Configuring the llama
+  servers (benchmark/gui_config.json)`: `llama_folder` (cartella llama.cpp,
+  gli script vivono lì), `llama_versions` (lista {"name","script"}, prima =
+  default), `llama_version` (scritta auto dalla GUI), requisiti script
+  (.cmd semplice, porta 8080, `pause` stripato) e `base_url 127.0.0.1:8080/v1`
+  in config.yaml (`local-llama` + `judge:`). Project Structure aggiornata
+  (gui.py, .vbs/.cmd); rimosso l'intestato `## Project Structure` duplicato.
+- **Tracked** (2026-08-23): `gui.py`, `run_benchmark_gui.vbs`/`.cmd` e
+  `BrainBench-llama_GUI.jpg` sono ora committati (gui.py era untracked).
 - **Rename modello** (2026-08-23): cartella raw rinominata
   `unsloth_qwen3.8-27b-ggml_IQ3_XXS` → `unsloth_qwen3.8-27b-mtp_IQ3_XXS`
   e aggiornati i 300 file `q*_run*.json` dentro: campo `model_name`
@@ -167,7 +192,7 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
 - I raw includono ora il campo `"reasoning"` (thinking, per debug; solo i
   provider OpenAI-compat lo espongono: llama.cpp → `reasoning_content`,
   OpenAI → `reasoning`; estratti in models.py, salvati in run_benchmark.py).
-- `gui.py` ancora **untracked** in git — da committare quando l'utente è contento.
+- `gui.py` (e `run_benchmark_gui.vbs`/`.cmd`, `BrainBench-llama_GUI.jpg`) ora **committati** (2026-08-23; prima gui.py era untracked).
 - Il log è in un `sg.TabGroup` con 2 tab: **App log** (eventi GUI) e
   **Server log** (stdout di llama-server, via `log(line, server=True)`;
   i lifecycle "[llama] starting/stopped/exited" restano nell'App log).
