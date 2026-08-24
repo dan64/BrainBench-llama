@@ -167,9 +167,9 @@ weights
 models
 assets
 results/v1/raw/
-*.jpg
-*.png
-*.pdf
+#*.jpg
+#*.png
+#*.pdf
 *.old
 
 /bench_app.log.txt
