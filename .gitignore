@@ -172,3 +172,5 @@ results/
 *.pdf
 *.old
 
+/bench_app.log.txt
+/bench_server.log.txt

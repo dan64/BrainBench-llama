@@ -4,11 +4,11 @@
     705
   ],
   "llama_folder": "D:\\Programs\\llama.cpp",
-  "llama_version": "turboquant",
-  "local_model_id": "unsloth/qwen3.8-27b:Q3_K_XL",
-  "questions": "1",
-  "category": "1",
-  "runs": "2",
+  "llama_version": "ggml",
+  "local_model_id": "unsloth/qwen3.8-27b-ggml:IQ3_XXS",
+  "questions": "",
+  "category": "",
+  "runs": "3",
   "resume": true,
   "no_judge": true
 }
