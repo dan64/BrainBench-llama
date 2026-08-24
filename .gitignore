@@ -166,7 +166,7 @@ dist
 weights
 models
 assets
-#results/v1/raw/
+results/v1/raw/
 *.jpg
 *.png
 *.pdf
