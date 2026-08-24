@@ -120,7 +120,7 @@ models:
 #     model_id: claude-sonnet-4-6
 judge:
   provider: openai_compatible
-  model_id: unsloth/qwen3.8-27b-mtp:Q3_K_XL
+  model_id: unsloth/qwen3.8-27b:Q4_K_S
   base_url: http://127.0.0.1:8080/v1
   # Il judge è lo stesso modello reasoning xhigh: cappiamo anche il suo
   # thinking (il giudizio è un semplice confronto; 1024 token bastano e

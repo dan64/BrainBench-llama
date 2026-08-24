@@ -1,6 +1,6 @@
 # BrainBench — MEMORY per le sessioni future
 
-Aggiornato: 2026-08-22. Questo file è il punto di partenza per una nuova sessione:
+Aggiornato: 2026-08-23. Questo file è il punto di partenza per una nuova sessione:
 leggi questo, poi `README.md` e `benchmark/config.yaml`.
 
 ## Cosa è
@@ -125,6 +125,16 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
 - `.env` in radice per le chiavi API (guardare `.env.example`).
 
 ## Stato attuale (lasciato così alla chiusura della sessione)
+- **Rename modello** (2026-08-23): cartella raw rinominata
+  `unsloth_qwen3.8-27b-ggml_IQ3_XXS` → `unsloth_qwen3.8-27b-mtp_IQ3_XXS`
+  e aggiornati i 300 file `q*_run*.json` dentro: campo `model_name`
+  → `unsloth/qwen3.8-27b-mtp:IQ3_XXS` (sostituzione a byte, JSON validati,
+  0 riferimenti al nome vecchio in `results/`). `scores.json` non toccato:
+  usa il nome cartella come chiave (era già coerente).
+- **Log GUI pulito** (2026-08-23): info pending nel tab App log (niente più
+  Text nell'header), dedup righe identiche consecutive, job completato
+  one-shot, loop `<Configure>` spezzato, righe vuote filtrate a monte in
+  `log()` (vedi bug 10-11). Testato headless e confermato in GUI reale.
 - Pipeline testata end-to-end con `unsloth/qwen3.8-27b-mtp:Q3_K_XL` (q1, cat 1,
   run 1, `--no-judge` poi `--judge-only`): risposta non vuota, `reasoning`
   salvato nel raw, self-judge ok. Con il reasoning budget attivo (2026-08-22):
@@ -165,7 +175,10 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
 - Log persistenti per debug: ogni riga mostrata nelle tab va ANCHE su file in radice,
   scritti via `App.log()` → `_log_to_file`: `bench_app.log.txt` (tab App log) e
   `bench_server.log.txt` (tab Server log). Append+flush per riga, best-effort
-  (un errore di scrittura non rompe la GUI). Righe tqdm escluse, come in UI.
+  (un errore di scrittura non rompe la GUI). Righe tqdm escluse, come in UI;
+  inoltre (2026-08-23) le righe vuote/solo-spazi sono filtrate a monte in
+  `log()` (né a schermo né nel file) e le righe identiche consecutive sono
+  deduplicate.
 
 ## Bug già fixati in questa sessione (non ri-rivelare)
 1. `import re` mancante in run_benchmark.py (GUI non partiva).
@@ -213,6 +226,28 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
    A budget raggiunto il thinking TRONCATO viene comunque restituito in
    `reasoning_content`, tagliato esattamente al confine del budget
    (utile per debug).
+10. **Log spam / righe duplicate** (2026-08-23, 4 fix in gui.py):
+   (a) il `sg.Text` `-PENDINGINFO-` nell'header è rimosso: l'info pending
+   (es. "239 pending (unjudged/errored) responses") va nel tab App log via
+   `log()` in `_refresh_results`; (b) `log()` salta la riga se identica alla
+   precedente (dedup per target: `self._last_app_log` / `self._last_srv_log`,
+   prima di `_log_to_file` e dell'inserimento nel tab);
+   (c) **job one-shot**: dopo `job.finished` → `self.job = None` (prima il
+   blocco di completion si rieseguiva a ogni iterazione del loop → coppie
+   duplicate `[exit code 0]` / `Scores updated. Review the tables above.`);
+   (d) **loop di feedback `<Configure>`**: il bind chiamava `_refresh_models`
+   + `_refresh_results` a ogni evento configure, e l'update delle tabelle
+   generava a sua volta nuovi configure (~20 refresh/sec in perpetuo).
+   Fix: `_on_configure` ora fa i refresh solo se la dimensione root è
+   cambiata davvero (guard `self._last_cfg_size`).
+11. **Righe vuote nel server log** (2026-08-23): il filtro delle righe
+   vuote era solo in `_log_to_file` → file pulito ma tab a schermo pieno di
+   righe vuote (il server llama.cpp emette newline extra). Fix a monte:
+   in `log()` subito dopo il filtro tqdm:
+   `line = line.rstrip("\r\n")` + `if not line.strip(): return` —
+   righe vuote/solo-spazi scartate prima di dedup, file e tab;
+   `_log_to_file` ora scrive solo (best-effort). Il testo reale passa
+   intatto (solo newline di coda rimossi).
 
 ## Convenzioni di lavoro
 - L'utente parla italiano, rispondere in italiano.

@@ -50,8 +50,15 @@ LOG_MAX_LINES = 2000
 APP_LOG_PATH = ROOT_DIR / "bench_app.log.txt"
 SERVER_LOG_PATH = ROOT_DIR / "bench_server.log.txt"
 
-# Local llama.cpp server (scripts live in the user's llama.cpp folder)
-LLAMA_VERSIONS = ("ggml", "turboquant", "unsloth")
+# Local llama.cpp server (scripts live in the user's llama.cpp folder).
+# The variants and their launch scripts live in gui_config.json under
+# "llama_versions" (list of {"name": ..., "script": ...}); these defaults
+# apply when the key is missing/corrupt.
+DEFAULT_LLAMA_VERSIONS = (
+    ("ggml", "run_srv_ggml_p8080.cmd"),
+    ("turboquant", "run_srv_turboquant_p8080.cmd"),
+    ("unsloth", "run_srv_unsloth_p8080.cmd"),
+)
 DEFAULT_LLAMA_FOLDER = r"D:\Programs\llama.cpp"
 CREATE_NO_WINDOW = 0x08000000  # win32 creation flag
 
@@ -72,8 +79,8 @@ ERR_RE = re.compile(
     re.IGNORECASE)
 
 
-def llama_script_path(folder: str, version: str) -> Path:
-    return Path(folder) / f"run_srv_{version}_p8080.cmd"
+def llama_script_path(folder: str, script: str) -> Path:
+    return Path(folder) / script
 
 
 def _pump_lines(proc: subprocess.Popen, q: "queue.Queue"):
@@ -88,6 +95,26 @@ def _pump_lines(proc: subprocess.Popen, q: "queue.Queue"):
 # --------------------------------------------------------------------------- #
 # GUI user settings (gui_config.json, next to gui.py)
 # --------------------------------------------------------------------------- #
+def load_llama_versions(cfg: dict | None = None) -> list[tuple[str, str]]:
+    """Server variants from gui_config.json ('llama_versions'), (name, script).
+
+    Entry format: {"name": "unsloth", "script": "run_srv_unsloth_p8080.cmd"}.
+    The FIRST entry is the default variant. Falls back to
+    DEFAULT_LLAMA_VERSIONS when the key is missing or no entry is usable."""
+    if cfg is None:
+        cfg = load_gui_config()
+    out: list[tuple[str, str]] = []
+    raw = cfg.get("llama_versions")
+    if isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, dict):
+                name = str(item.get("name") or "").strip()
+                script = str(item.get("script") or "").strip()
+                if name and script:
+                    out.append((name, script))
+    return out or list(DEFAULT_LLAMA_VERSIONS)
+
+
 def load_gui_config() -> dict:
     """Read gui_config.json; tolerate missing/corrupt file."""
     try:
@@ -244,6 +271,9 @@ class App:
         self.job_scope: set[int] | None = None
         self.log_lines: list[tuple[str, bool]] = []  # (text, is_error)
         self._server_log_lines: list[tuple[str, bool]] = []
+        # dedup: last line written per log target (skip exact consecutive repeats)
+        self._last_app_log: str | None = None
+        self._last_srv_log: str | None = None
         self._log_tree = None          # Treeview behind the -LOG- table
         self._srv_log_tree = None      # Treeview behind the -SRVLOG- table
         self.selected_model: str | None = None
@@ -264,6 +294,7 @@ class App:
         # keep gui_config.json up to date while the user resizes the window
         self._last_saved_size = saved_size
         self._last_size_save = 0.0
+        self._last_cfg_size: tuple[int, int] | None = None
         self.e.TKroot.bind("<Configure>", self._on_configure, add=True)
         # log trees: red error tag on the Treeview behind each log table
         self._log_tree = self.e["-LOG-"].TKTreeview
@@ -284,6 +315,14 @@ class App:
 
     def _on_configure(self, _event=None):
         self._sync_window_size()
+        # The table updates inside the refresh re-trigger <Configure> on the
+        # root WITHOUT a real size change; without this guard the refresh
+        # feedback loop spins ~20/s and floods the log. React only to real
+        # window resizes.
+        size = (self.e.TKroot.winfo_width(), self.e.TKroot.winfo_height())
+        if size == self._last_cfg_size:
+            return
+        self._last_cfg_size = size
         self._refresh_models(keep=self.e["-MODEL-"].Get())
         self._refresh_results()
 
@@ -378,19 +417,24 @@ class App:
         ], pad=(4, 2))
 
         llama_folder = gcfg.get("llama_folder") or DEFAULT_LLAMA_FOLDER
-        llama_version = gcfg.get("llama_version") or LLAMA_VERSIONS[0]
-        if llama_version not in LLAMA_VERSIONS:
-            llama_version = LLAMA_VERSIONS[0]
+        # variant list (name -> script) from gui_config.json; the FIRST
+        # entry is the default variant
+        self._llama_versions = load_llama_versions(gcfg)
+        llama_names = [n for n, _ in self._llama_versions]
+        llama_version = gcfg.get("llama_version") or llama_names[0]
+        if llama_version not in llama_names:
+            llama_version = llama_names[0]
         # trusted mirror of the combo selection (the widget's Get() is not
         # reliable late in the session: a dead/empty widget silently falls
-        # back to LLAMA_VERSIONS[0])
+        # back to the first variant)
         self._llama_ver_sel = llama_version
         llama_row = sg.Col([
             [sg.Text("Llama server:", size=(12, 1)),
-             sg.Combo(list(LLAMA_VERSIONS), key="-LLAMAVER-", size=(13, 1),
+             sg.Combo(llama_names, key="-LLAMAVER-", size=(13, 1),
                       default_value=llama_version, readonly=True,
                       enable_events=True,
-                      tooltip="Server variant: run_srv_<version>_p8080.cmd"),
+                      tooltip="Server variant (name -> launch script mapping in "
+                              "gui_config.json 'llama_versions')"),
              sg.Input(llama_folder, key="-LLAMAFOLDER-", size=(36, 1),
                       tooltip="Folder containing the run_srv_*.cmd scripts"),
              sg.Button("Browse", key="-LLAMABROWSE-"),
@@ -414,13 +458,28 @@ class App:
                               "config file immediately.")],
         ], pad=(4, 2))
 
+        # current judge model: config.yaml is the source of truth
+        self._judge_model = ""
+        try:
+            jc = load_config(str(BENCH_DIR / "config.yaml")).get("judge") or {}
+            self._judge_model = str(jc.get("model_id") or "").strip()
+        except Exception:
+            pass
+
         btns = sg.Col([
             [sg.Button("Run benchmark", key="-RUN-", button_color="white on #2e7d32"),
              sg.Button("Judge only", key="-JUDGE-", tooltip="Judge pending responses (judge model must be loaded)"),
              sg.Button("Re-judge all", key="-REJUDGE-", tooltip="--judge-only --re-judge"),
              sg.Button("Check", key="-CHECK-", tooltip="Completeness check only"),
              sg.Button("Aggregate", key="-AGG-", tooltip="Re-aggregate scores.json only"),
-             sg.Button("Stop", key="-STOP-", disabled=True, button_color="white on #b71c1c")],
+             sg.Button("Stop", key="-STOP-", disabled=True, button_color="white on #b71c1c"),
+             sg.Text("Judge Model:", size=(64, 1), justification="r"),
+             sg.Combo([], key="-JUDGEMODEL-", size=(36, 1),
+                      default_value=self._judge_model, readonly=True,
+                      enable_events=True,
+                      tooltip="Judge model (llama-server). The selection is saved "
+                              "to judge.model_id in config.yaml immediately. "
+                              "Independent from the model under test.")],
         ], pad=(4, 2))
 
         prog = sg.Col([
@@ -477,7 +536,6 @@ class App:
                           key="-LOGTABS-", expand_x=True)
 
         layout = [[sg.Text("BrainBench", font=("Helvetica", 14, "bold")),
-                   sg.Text("", size=(1, 1), key="-PENDINGINFO-"),
                    sg.Button("Refresh results", key="-REFRESH-"),
                    sg.Button("Open results folder", key="-OPENDIR-")],
                   [ts_row], [llama_row], [sel_row], [btns], [prog],
@@ -524,7 +582,7 @@ class App:
             pending_info = f"{total_pending} pending (unjudged/errored) responses"
         self._model_rows = rows
         self.e["-MODELS-"].update(values=rows)
-        self.e["-PENDINGINFO-"].update(value=f"{pending_info}   ")
+        self.log(pending_info)
         if self.selected_model not in (rows and [str(r[0]) for r in rows] or []):
             # keep selection on a model that still exists (or the first one)
             self.selected_model = str(rows[0][0]) if rows else None
@@ -637,8 +695,14 @@ class App:
 
     def _llama_version(self) -> str:
         # mirror kept in Python, NOT the live widget: Get() on a dead/empty
-        # widget would silently fall back to LLAMA_VERSIONS[0]
+        # widget would silently fall back to the first variant
         return self._llama_ver_sel
+
+    def _llama_script_name(self, version: str) -> str:
+        for name, script in self._llama_versions:
+            if name == version:
+                return script
+        return f"run_srv_{version}_p8080.cmd"  # last-resort convention
 
     def _save_llama_settings(self):
         save_gui_config({"llama_folder": self._llama_folder(),
@@ -662,7 +726,7 @@ class App:
     def _start_llama(self):
         version = self._llama_version()
         folder = self._llama_folder()
-        script = llama_script_path(folder, version)
+        script = llama_script_path(folder, self._llama_script_name(version))
         if not Path(folder).is_dir():
             sg.popup_error(f"Folder not found:\n{folder}")
             return
@@ -814,6 +878,77 @@ class App:
         tmp.replace(path)
         return True
 
+    def _set_judge_model(self, value: str) -> bool:
+        """Set the judge's model_id in the config file.
+
+        Targeted line edit (no yaml round-trip) so comments and layout are
+        preserved; only the top-level 'judge:' block is touched, never the
+        model_id of the model entries (they carry a dash). Returns True on
+        success."""
+        path = self._cfg_file()
+        try:
+            raw = path.read_bytes()
+        except Exception as e:
+            sg.popup_error(f"Cannot read {path.name}:\n{e}")
+            return False
+        # raw bytes: read_text would normalize CRLF to LF (universal newlines)
+        nl = "\r\n" if b"\r\n" in raw else "\n"
+        lines = raw.decode("utf-8").splitlines()
+        start = None
+        for i, l in enumerate(lines):
+            if re.match(r"^judge\s*:", l):
+                start = i
+                break
+        if start is None:
+            sg.popup_error("Il blocco 'judge:' non è in config.yaml.")
+            return False
+        # block end: next top-level key
+        end = len(lines)
+        for j in range(start + 1, len(lines)):
+            l = lines[j]
+            if l.strip() and l[0] not in " \t#":
+                end = j
+                break
+        for j in range(start + 1, end):
+            m = re.match(r"^(\s*)model_id:", lines[j])
+            if m:
+                rest = lines[j][m.end():].strip()
+                comment = ""
+                if rest:
+                    cm = re.match(r"^(.*?)\s*(#.*)$", rest)
+                    if cm:
+                        comment = f"  {cm.group(2).strip()}"
+                lines[j] = f"{m.group(1)}model_id: {value}{comment}"
+                break
+        else:
+            # key missing in the block: insert it right after 'judge:'
+            indent = "  "
+            for j in range(start + 1, end):
+                mm = re.match(r"^(\s*)\S", lines[j])
+                if mm:
+                    indent = mm.group(1)
+                    break
+            lines.insert(start + 1, f"{indent}model_id: {value}")
+        tmp = path.with_name(path.name + ".tmp")
+        # write_bytes: write_text (newline=None) would turn every LF into
+        # CRLF on Windows and rewrite the whole file's line endings
+        tmp.write_bytes((nl.join(lines) + nl).encode("utf-8"))
+        tmp.replace(path)
+        return True
+
+    def _on_judgemodel_selection(self):
+        sel = str(self.e["-JUDGEMODEL-"].Get() or "").strip()
+        if not sel or sel == self._judge_model:
+            return
+        if self._set_judge_model(sel):
+            cfg, _, _ = self._read_config()
+            if (cfg or {}).get("judge", {}).get("model_id") != sel:
+                self.log(f"Judge model: save di '{sel}' NON verificato in "
+                         f"config.yaml", error=True)
+                return
+            self._judge_model = sel
+            self.log(f"Judge model: {sel} (salvato)")
+
     def _on_rbtokens_selection(self):
         raw = self.e["-RBTOKENS-"].Get()
         try:
@@ -872,6 +1007,18 @@ class App:
                 if self.local_model and self.local_model in ids:
                     self.e["-LLMALIST-"].select_index(ids.index(self.local_model))
                 self._refresh_models(keep=self.e["-MODEL-"].Get())
+                # keep the judge combo in sync with the server's models
+                jcombo = self.e["-JUDGEMODEL-"]
+                jcombo.update(values=ids if ids else ([self._judge_model]
+                                                       if self._judge_model
+                                                       else []))
+                if self._judge_model in ids:
+                    jcombo.update(value=self._judge_model)
+                elif ids:
+                    jcombo.update(value=ids[0])
+                    self.log(f"Judge model corrente '{self._judge_model}' "
+                             f"non è nel server: la combo mostra "
+                             f"'{ids[0]}' (niente salvato)")
             else:
                 self.log(f"llama-server not reachable at "
                          f"{self._local_base_url()}/models: {err}", error=True)
@@ -900,8 +1047,20 @@ class App:
         in the project root (for debugging)."""
         if TQDM_LINE.search(line):
             return
+        # The server can emit extra trailing newlines (blank lines); strip
+        # them upstream so blanks show neither on screen nor in the file.
+        line = line.rstrip("\r\n")
+        if not line.strip():
+            return  # pure-blank (spaces/tabs too), same as a blank line
+        last = self._last_srv_log if server else self._last_app_log
+        if line == last:
+            return  # exact duplicate of the previous line: skip
         if error is None:
             error = bool(ERR_RE.search(line))
+        if server:
+            self._last_srv_log = line
+        else:
+            self._last_app_log = line
         self._log_to_file(line, server)
         lines = self._server_log_lines if server else self.log_lines
         lines.append((line, error))
@@ -915,11 +1074,6 @@ class App:
         """Append a line to the persistent log file (best effort)."""
         path = SERVER_LOG_PATH if server else APP_LOG_PATH
         try:
-            # The server can emit extra trailing newlines (blank lines); collapse
-            # them to a single newline and skip pure-blank lines.
-            line = line.rstrip("\r\n")
-            if not line:
-                return
             with path.open("a", encoding="utf-8") as f:
                 f.write(line + "\n")
         except Exception:
@@ -1126,6 +1280,9 @@ to date, not just at close time: FreeSimpleGUI destroys the tkinter
                     self._refresh_results()
                     if rc == 0 and self.job_kind in ("run", "judge"):
                         self.log("Scores updated. Review the tables above.")
+                    # one-shot handling: clear the finished job so the next
+                    # loop iterations don't re-log/refresh for it
+                    self.job = None
                 else:
                     if now - last_poll > 350:
                         self._poll_progress()
@@ -1172,6 +1329,12 @@ to date, not just at close time: FreeSimpleGUI destroys the tkinter
             elif event == "-RELOADCFG-":
                 self._refresh_models(keep=self.e["-MODEL-"].Get())
                 self._refresh_rbtokens()
+                cfg, _, _ = self._read_config()
+                jm = str(((cfg or {}).get("judge") or {}).get("model_id")
+                         or "").strip()
+                if jm and jm != self._judge_model:
+                    self._judge_model = jm
+                    self.e["-JUDGEMODEL-"].update(value=jm)
             elif event == "-OPENDIR-":
                 cfg, _, _ = self._read_config()
                 outdir = (cfg or {}).get("output_dir", "results")
@@ -1212,6 +1375,8 @@ to date, not just at close time: FreeSimpleGUI destroys the tkinter
                 self._on_model_list_selection()
             elif event == "-RBTOKENS-":
                 self._on_rbtokens_selection()
+            elif event == "-JUDGEMODEL-":
+                self._on_judgemodel_selection()
             elif event == "-TESTSET-":
                 self.selected_model = None
                 self._refresh_results()
