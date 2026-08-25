@@ -42,6 +42,8 @@ The GUI launches `llama-server` via a **startup script you provide** (one per se
 - `llama_versions` — list of `{"name": ..., "script": ...}` entries: `name` is what shows in the GUI combo, `script` is the `.cmd` file that starts `llama-server` on `127.0.0.1:8080` (OpenAI-compatible endpoint, no API key). **The first entry is the default variant.** To support a different build, add one entry and drop the matching `.cmd` script in `llama_folder` — the GUI picks it up on next start.
 - `llama_version` — currently selected variant. The GUI writes it automatically on change, so this key normally doesn't need manual editing.
 
+The `llama-server` must run in `router mode`, for details see: <https://github.com/ggml-org/llama.cpp/blob/master/docs/preset.md>  
+
 Build download locations (matching the three reference variants above):
 
 - **ggml** (upstream) — <https://github.com/ggml-org/llama.cpp/releases>
