@@ -19,7 +19,7 @@
       "script": "run_srv_unsloth_p8080.cmd"
     }
   ],
-  "local_model_id": "unsloth/qwen3.8-27b:Q4_K_S",
+  "local_model_id": "unsloth/qwen3.8-27b:Q3_K_XL",
   "questions": "",
   "category": "",
   "runs": "3",
