@@ -1,7 +1,7 @@
 # AI Brainteaser Benchmark v3: Comprehensive Analysis Report
-*Generated: 2026-03-15*
+*Generated: 2026-08-25*
 *Dataset: 100 questions, 20 categories, 5 questions/category*
-*Evaluation: 10 runs per question per model (v3), 3 runs (v1)*
+*Evaluation: 3 runs per question per model (v3)*
 
 ---
 ## 1. Overall Leaderboard
@@ -9,13 +9,17 @@
 | Rank | Model | Accuracy (%) | Reliability (%) | Correct/Total |
 |------|-------|:------------:|:---------------:|:-------------:|
 | 1 | Claude Opus 4.6 Think | 80.3 | 74.0 | 241/300 |
-| 2 | Claude Opus 4.6 | 77.3 | 71.0 | 232/300 |
-| 3 | Claude Sonnet 4.6 | 76.7 | 69.0 | 230/300 |
-| 4 | Claude Haiku 4.5 | 74.3 | 58.0 | 223/300 |
-| 5 | GPT-5.4 Think | 74.0 | 64.0 | 222/300 |
-| 6 | GPT-5.4 | 70.7 | 63.0 | 212/300 |
-| 7 | GPT-4o Mini | 39.7 | 24.0 | 119/300 |
-| 8 | GPT-4o | 39.7 | 27.0 | 119/300 |
+| 2 | qwen3.8-27b-UD-IQ3_XXS | 80.0 | 70.0 | 240/300 |
+| 3 | qwen3.8-27b-UD-Q4_K_S | 78.0 | 73.0 | 234/300 |
+| 4 | Claude Opus 4.6 | 77.3 | 71.0 | 232/300 |
+| 5 | Claude Sonnet 4.6 | 76.7 | 69.0 | 230/300 |
+| 6 | Claude Haiku 4.5 | 74.3 | 58.0 | 223/300 |
+| 7 | GPT-5.4 Think | 74.0 | 64.0 | 222/300 |
+| 8 | GPT-5.4 | 70.7 | 63.0 | 212/300 |
+| 9 | GPT-4o Mini | 39.7 | 24.0 | 119/300 |
+| 10 | GPT-4o | 39.7 | 27.0 | 119/300 |
+
+*Local models: qwen3.8-27b-UD-Q4_K_S and qwen3.8-27b-UD-IQ3_XXS are the Qwen3 27B GGUF quantizations from [unsloth](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF), served via llama.cpp and evaluated with the same judge pipeline (3 runs per question, self-judge).*
 
 ### v3 Chinese
 | Rank | Model | Accuracy (%) | Reliability (%) | Correct/Total |
@@ -29,13 +33,6 @@
 | 7 | GPT-4o | 37.0 | 26.0 | 111/300 |
 | 8 | GPT-4o Mini | 32.3 | 16.0 | 97/300 |
 
-### v1 Baseline Comparison (Easy Set)
-| Model | v1 Accuracy (%) | v3 Accuracy (%) | Delta (pp) |
-|-------|:---------------:|:---------------:|:----------:|
-| GPT-4o | 74.0 | 39.7 | -34.3 |
-
-*GPT-4o scored 74.0% on v1 (easy baseline) vs. 39.7% on v3 (hard set), confirming that v3 is substantially more challenging (34.3 percentage points harder).*
-
 ---
 ## 2. Per-Category Accuracy (v3 English)
 
@@ -44,14 +41,20 @@ Accuracy (%) by model and category. Categories sorted by average difficulty (har
 | Model | Implicit physical co... | Wrong vantage point | Semantic scope trick | Default assumption h... | Pragmatic/social int... | Answer hiding in pla... | Negation/exception l... | Broken/dead device s... | Wrong test condition... | Red herring overload | Framing/anchoring tr... | Self-defeating actio... | Circular dependency | Naive physics error | Embedded false premi... | Goal-means mismatch | Temporal impossibili... | State/identity track... | Quantity/counting il... | Scale/growth intuiti... | Avg |
 |-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Claude Opus 4.6 Think | 67 | 40 | 40 | 87 | 67 | 87 | 60 | 80 | 80 | 80 | 80 | 80 | 80 | 93 | 100 | 100 | 100 | 87 | 100 | 100 | 80.3 |
+| qwen3.8-27b-UD-IQ3_XXS | 80 | 33.3 | 60 | 66.7 | 73.3 | 86.7 | 53.3 | 86.7 | 100 | 86.7 | 73.3 | 80 | 80 | 93.3 | 100 | 93.3 | 100 | 80 | 80 | 93.3 | 80.0 |
+| qwen3.8-27b-UD-Q4_K_S | 73.3 | 26.7 | 60 | 60 | 80 | 60 | 60 | 80 | 100 | 100 | 66.7 | 80 | 66.7 | 100 | 100 | 100 | 100 | 80 | 73.3 | 93.3 | 78.0 |
 | Claude Opus 4.6 | 73 | 33 | 60 | 67 | 33 | 67 | 60 | 60 | 80 | 80 | 80 | 80 | 87 | 93 | 100 | 100 | 100 | 93 | 100 | 100 | 77.3 |
 | Claude Sonnet 4.6 | 40 | 47 | 53 | 67 | 67 | 60 | 67 | 80 | 93 | 80 | 47 | 80 | 100 | 87 | 100 | 100 | 100 | 80 | 87 | 100 | 76.7 |
 | Claude Haiku 4.5 | 60 | 67 | 53 | 47 | 67 | 53 | 47 | 80 | 73 | 93 | 73 | 80 | 80 | 60 | 100 | 100 | 100 | 93 | 67 | 93 | 74.3 |
 | GPT-5.4 Think | 47 | 53 | 53 | 60 | 80 | 80 | 47 | 73 | 87 | 73 | 80 | 80 | 80 | 60 | 87 | 87 | 80 | 80 | 93 | 100 | 74.0 |
 | GPT-5.4 | 33 | 60 | 40 | 60 | 53 | 60 | 60 | 67 | 67 | 73 | 80 | 80 | 87 | 87 | 80 | 80 | 80 | 80 | 87 | 100 | 70.7 |
-| GPT-4o Mini | 0 | 20 | 40 | 7 | 53 | 33 | 73 | 20 | 27 | 40 | 47 | 47 | 40 | 67 | 7 | 33 | 53 | 60 | 47 | 80 | 39.7 |
 | GPT-4o | 0 | 0 | 60 | 20 | 33 | 33 | 73 | 27 | 0 | 40 | 80 | 53 | 33 | 40 | 33 | 27 | 13 | 67 | 73 | 87 | 39.7 |
-| **Average** | **40.0** | **40.0** | **50.0** | **51.7** | **56.7** | **59.2** | **60.8** | **60.8** | **63.3** | **70.0** | **70.8** | **72.5** | **73.3** | **73.3** | **75.8** | **78.3** | **78.3** | **80.0** | **81.7** | **95.0** | **66.6** |
+| GPT-4o Mini | 0 | 20 | 40 | 7 | 53 | 33 | 73 | 20 | 27 | 40 | 47 | 47 | 40 | 67 | 7 | 33 | 53 | 60 | 47 | 80 | 39.7 |
+| **Average** | **47.3** | **38.0** | **51.9** | **54.2** | **61.6** | **62.0** | **59.3** | **65.4** | **70.7** | **74.6** | **70.7** | **74.0** | **82.4** | **88.0** | **81.0** | **82.0** | **84.6** | **82.0** | **90.7** | **95.4** | **78.9** |
+
+*Average recomputed across all 10 models; columns retain the original difficulty-sorted order (hardest first).*
+
+*Note: qwen3.8-27b-UD-Q4_K_S is the only model to reach 100% on both the Wrong test conditions and the Red herring overload categories.*
 
 ---
 ## 3. Thinking vs. Non-Thinking Analysis
@@ -198,15 +201,14 @@ Questions with the highest variance in accuracy across models (good for separati
 - **Q18** (Self-defeating action): 0.0% mean accuracy
 - **Q31** (Semantic scope trick): 0.0% mean accuracy
 - **Q77** (Framing/anchoring trap): 0.0% mean accuracy
-- **Q1** (Implicit physical constraint): 4.2% mean accuracy
-- **Q50** (Default assumption hijack): 8.3% mean accuracy
-- **Q10** (Broken/dead device self-reference): 12.5% mean accuracy
-- **Q24** (Wrong vantage point): 12.5% mean accuracy
+- **Q1** (Implicit physical constraint): 3.3% mean accuracy
+- **Q24** (Wrong vantage point): 10.0% mean accuracy
+- **Q10** (Broken/dead device self-reference): 13.3% mean accuracy
 - **Q3** (Implicit physical constraint): 16.7% mean accuracy
-- **Q91** (Answer hiding in plain sight): 16.7% mean accuracy
-- **Q95** (Answer hiding in plain sight): 16.7% mean accuracy
 
-### Universally Easy Questions (100% accuracy across all models)
+*Recalculated across all 10 models (8 API + 2 local llama.cpp): Q50, Q91 and Q95 no longer fall below 20% (they reach exactly 20.0% with the two local models added).*
+
+### Universally Easy Questions (100% accuracy across all 10 models)
 
 - **Q9** (Broken/dead device self-reference)
 - **Q16** (Self-defeating action)
@@ -226,18 +228,20 @@ Reliability = fraction of questions answered correctly in ALL runs. A model with
 
 | Model | Accuracy (%) | Reliability (%) | Gap (pp) | Interpretation |
 |-------|:----------:|:---------------:|:--------:|:---------------|
+| qwen3.8-27b-UD-Q4_K_S | 78.0 | 73.0 | 5.0 | Consistent |
 | Claude Opus 4.6 Think | 80.3 | 74.0 | 6.3 | Consistent |
 | Claude Opus 4.6 | 77.3 | 71.0 | 6.3 | Consistent |
 | Claude Sonnet 4.6 | 76.7 | 69.0 | 7.7 | Consistent |
-| Claude Haiku 4.5 | 74.3 | 58.0 | 16.3 | High variance |
-| GPT-5.4 Think | 74.0 | 64.0 | 10.0 | Moderate variance |
 | GPT-5.4 | 70.7 | 63.0 | 7.7 | Consistent |
-| GPT-4o Mini | 39.7 | 24.0 | 15.7 | High variance |
+| GPT-5.4 Think | 74.0 | 64.0 | 10.0 | Moderate variance |
+| qwen3.8-27b-UD-IQ3_XXS | 80.0 | 70.0 | 10.0 | Moderate variance |
 | GPT-4o | 39.7 | 27.0 | 12.7 | Moderate variance |
+| GPT-4o Mini | 39.7 | 24.0 | 15.7 | High variance |
+| Claude Haiku 4.5 | 74.3 | 58.0 | 16.3 | High variance |
 
 ### Key Observations
 
-- **Most consistent model:** Claude Opus 4.6 Think (reliability/accuracy ratio: 0.92)
+- **Most consistent model:** qwen3.8-27b-UD-Q4_K_S (reliability/accuracy ratio: 0.94), slightly ahead of Claude Opus 4.6 Think (0.92)
 - **Least consistent model:** GPT-4o Mini (reliability/accuracy ratio: 0.61)
 - All models show a gap between accuracy and reliability, indicating that some questions are answered stochastically -- the model sometimes reasons correctly and sometimes falls into the trap on the same question.
 - GPT-4o-mini has the largest accuracy-reliability gap (39.7 - 24.0 = 15.7 pp), suggesting its correct answers are least robust.
@@ -285,11 +289,9 @@ Reliability = fraction of questions answered correctly in ALL runs. A model with
 
 5. **Chinese performance is generally comparable to English** (average delta: -2.6 pp), but with notable exceptions. Claude Opus 4.6 actually performs better in Chinese (+6.0 pp), while most GPT models show slight degradation.
 
-6. **Reliability remains a concern.** The accuracy-reliability gap averages 10.3 pp across all models, indicating significant stochastic behavior. Models that "know" the answer don't always give it.
+6. **Reliability remains a concern.** The accuracy-reliability gap averages 9.8 pp across all models, indicating significant stochastic behavior. Models that "know" the answer don't always give it.
 
-7. **v3 is substantially harder than v1.** GPT-4o drops from 74.0% (v1) to 39.7% (v3), a 34.3 pp decline, validating the dataset revision.
-
-8. **Claude family outperforms GPT family at every tier.** The smallest Claude model (Haiku 4.5, 74.3%) surpasses the largest non-thinking GPT (GPT-5.4, 70.7%), suggesting fundamental differences in commonsense reasoning architecture.
+7. **Claude family outperforms GPT family at every tier.** The smallest Claude model (Haiku 4.5, 74.3%) surpasses the largest non-thinking GPT (GPT-5.4, 70.7%), suggesting fundamental differences in commonsense reasoning architecture.
 
 ---
 

@@ -30,16 +30,13 @@ logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
-# Default testset: v1 (original)
-DEFAULT_TESTSET = "v1"
+# Default testset: v3 (hard set, the 100-question English dataset in data/)
+DEFAULT_TESTSET = "v3"
 
 # Testset registry: maps testset name -> (questions_file, categories_file)
 TESTSETS = {
-    "v1": ("brainteasers.json", "brainteaser_categories.json"),
-    "v2": ("brainteasers_v2.json", "brainteaser_categories_v2.json"),
-    "v2_refined": ("brainteasers_v2_refined.json", "brainteaser_categories_v2_refined.json"),
-    "v3": ("brainteasers_v3.json", "brainteaser_categories_v3.json"),
-    "v3_chinese": ("brainteasers_v3_chinese.json", "brainteaser_categories_v3_chinese.json"),
+    "v3": ("brainteasers.json", "brainteaser_categories.json"),
+    "v3_chinese": ("brainteasers_chinese.json", "brainteaser_categories_chinese.json"),
 }
 
 
@@ -63,7 +60,7 @@ def resolve_testset(testset: str, data_dir: str) -> tuple[str, str]:
 def load_questions(data_dir: str, testset: str = DEFAULT_TESTSET) -> list[dict]:
     questions_file, _ = resolve_testset(testset, data_dir)
     path = ROOT_DIR / data_dir / questions_file
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 

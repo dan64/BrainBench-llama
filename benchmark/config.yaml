@@ -128,7 +128,7 @@ judge:
   reasoning_budget_tokens: 1024
   reasoning_budget_message: "\n\nOkay, I have enough information to answer.\n\n"
 
-runs_per_question: 10
+runs_per_question: 3
 max_concurrent_requests: 2   # keep low: a local server serializes on the GPU anyway
 max_tokens: 8192
 output_dir: results

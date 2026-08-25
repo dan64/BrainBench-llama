@@ -42,6 +42,12 @@ The GUI launches `llama-server` via a **startup script you provide** (one per se
 - `llama_versions` — list of `{"name": ..., "script": ...}` entries: `name` is what shows in the GUI combo, `script` is the `.cmd` file that starts `llama-server` on `127.0.0.1:8080` (OpenAI-compatible endpoint, no API key). **The first entry is the default variant.** To support a different build, add one entry and drop the matching `.cmd` script in `llama_folder` — the GUI picks it up on next start.
 - `llama_version` — currently selected variant. The GUI writes it automatically on change, so this key normally doesn't need manual editing.
 
+Build download locations (matching the three reference variants above):
+
+- **ggml** (upstream) — <https://github.com/ggml-org/llama.cpp/releases>
+- **unsloth** — <https://github.com/unslothai/llama.cpp/releases>
+- **turboquant** — <https://github.com/AtomicBot-ai/atomic-llama-cpp-turboquant/releases>
+
 Script requirements: it must start the server on port **8080** and be a plain `.cmd`; the GUI runs a hidden copy with any trailing `pause` line stripped (otherwise a crashed server would look "running" forever in a hidden console), and streams its output to the *Server log* tab (errors in red).
 
 Client-side, the local endpoint is set in [`benchmark/config.yaml`](benchmark/config.yaml): `base_url: http://127.0.0.1:8080/v1` in the `local-llama` model entry and in the `judge:` block (when the judge is also local). If you run the server on another port, update both entries *and* the startup script.
@@ -50,18 +56,24 @@ Everything in the original benchmark (CLI, dataset, judge, score aggregation) is
 
 ## Key Results
 
+*English v3 (hard set), 3 runs per question per model, LLM judge.*
+
 | Rank | Model | Accuracy | Reliability |
 |------|-------|----------|-------------|
 | 1 | Claude Opus 4.6 (thinking) | 80.3% | 74% |
-| 2 | Claude Opus 4.6 | 77.3% | 71% |
-| 3 | Claude Sonnet 4.6 | 76.7% | 69% |
-| 4 | Claude Haiku 4.5 | 74.3% | 58% |
-| 5 | GPT-5.4 (thinking) | 74.0% | 64% |
-| 6 | GPT-5.4 | 70.7% | 63% |
-| 7 | GPT-4o | 39.7% | 27% |
-| 8 | GPT-4o Mini | 39.7% | 24% |
+| 2 | qwen3.8-27b-UD-IQ3_XXS | 80.0% | 70% |
+| 3 | qwen3.8-27b-UD-Q4_K_S | 78.0% | 73% |
+| 4 | Claude Opus 4.6 | 77.3% | 71% |
+| 5 | Claude Sonnet 4.6 | 76.7% | 69% |
+| 6 | Claude Haiku 4.5 | 74.3% | 58% |
+| 7 | GPT-5.4 (thinking) | 74.0% | 64% |
+| 8 | GPT-5.4 | 70.7% | 63% |
+| 9 | GPT-4o Mini | 39.7% | 24% |
+| 10 | GPT-4o | 39.7% | 27% |
 
-The hardest categories -- *implicit physical constraint* and *wrong vantage point* -- average only 40% accuracy across all models.
+*The two `qwen3.8-27b-UD-*` entries are low-quantization GGUF builds ([unsloth Qwen3 27B](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF): ~4-bit `Q4_K_S`, ~3-bit `IQ3_XXS`) served via llama.cpp with a self-judge. They were added to check the impact of quantization on the model's reasoning ability: despite the reduced bit-width, both match the top-tier API models.*
+
+The hardest categories -- *wrong vantage point* (38%) and *implicit physical constraint* (47%) -- still average the lowest accuracy across all models.
 
 ## Example
 
@@ -73,27 +85,29 @@ GPT-4o recommends walking. Every human knows you drive.
 
 ## The 20 Failure Categories
 
+*Avg accuracy across all 10 models (8 API + 2 local GGUF), hardest first.*
+
 | # | Category | Avg Accuracy |
 |---|----------|:---:|
-| 1 | Implicit physical constraint | 40% |
-| 2 | Wrong vantage point | 40% |
-| 3 | Semantic scope trick | 50% |
-| 4 | Default assumption hijack | 52% |
-| 5 | Pragmatic/social intent | 57% |
-| 6 | Answer hiding in plain sight | 59% |
-| 7 | Negation/exception logic | 61% |
-| 8 | Broken/dead device self-reference | 61% |
-| 9 | Wrong test conditions | 63% |
-| 10 | Red herring overload | 70% |
-| 11 | Framing/anchoring trap | 71% |
-| 12 | Self-defeating action | 73% |
-| 13 | Circular dependency | 73% |
-| 14 | Naive physics error | 73% |
-| 15 | Embedded false premise | 76% |
-| 16 | Goal-means mismatch | 78% |
-| 17 | Temporal impossibility | 78% |
-| 18 | State/identity tracking | 80% |
-| 19 | Quantity/counting illusion | 82% |
+| 1 | Wrong vantage point | 38% |
+| 2 | Implicit physical constraint | 47% |
+| 3 | Semantic scope trick | 52% |
+| 4 | Default assumption hijack | 54% |
+| 5 | Negation/exception logic | 59% |
+| 6 | Pragmatic/social intent | 62% |
+| 7 | Answer hiding in plain sight | 62% |
+| 8 | Broken/dead device self-reference | 65% |
+| 9 | Wrong test conditions | 71% |
+| 10 | Framing/anchoring trap | 71% |
+| 11 | Self-defeating action | 74% |
+| 12 | Red herring overload | 75% |
+| 13 | Embedded false premise | 81% |
+| 14 | Goal-means mismatch | 82% |
+| 15 | State/identity tracking | 82% |
+| 16 | Circular dependency | 82% |
+| 17 | Temporal impossibility | 85% |
+| 18 | Naive physics error | 88% |
+| 19 | Quantity/counting illusion | 91% |
 | 20 | Scale/growth intuition failure | 95% |
 
 ## Dataset
@@ -157,7 +171,18 @@ python benchmark/run_benchmark.py --model local-llama --runs 3
 ```
 
 - The model is defined in [`benchmark/config.yaml`](benchmark/config.yaml) (`local-llama` entry, `base_url: http://127.0.0.1:8080/v1`). If you run llama-server on another port/host, edit `base_url` there and in the `judge:` block.
-- **Answer verification** is performed by the LLM judge (`benchmark/judge.py`). It is configured in the same `config.yaml` under `judge:` and, by default, uses **the same local model** being tested. Note this is a self-judge: it is biased toward agreeing with the model's own phrasing. To use an external judge instead, point the `judge:` block at a cloud provider, e.g.:
+- **Answer verification** is performed by the LLM judge (`benchmark/judge.py`). It is configured in the same `config.yaml` under `judge:` and, by default, uses **the same local model** being tested. Note this is a self-judge: it is biased toward agreeing with the model's own phrasing.
+  - **In this build the judge can be a local model too.** Pick it from the GUI's *Judge Model* dropdown (populated from `GET /v1/models` of the local llama-server — the selection is saved straight into `judge.model_id`, and is independent from the model under test), or configure it manually in `config.yaml`, e.g.:
+
+    ```yaml
+    judge:
+      provider: openai_compatible
+      model_id: unsloth/qwen3.8-27b:Q4_K_S
+      base_url: http://127.0.0.1:8080/v1
+      reasoning_budget_tokens: 1024
+    ```
+
+  To use an external judge instead, point the `judge:` block at a cloud provider, e.g.:
 
   ```yaml
   judge:

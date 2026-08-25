@@ -473,7 +473,7 @@ class App:
              sg.Button("Check", key="-CHECK-", tooltip="Completeness check only"),
              sg.Button("Aggregate", key="-AGG-", tooltip="Re-aggregate scores.json only"),
              sg.Button("Stop", key="-STOP-", disabled=True, button_color="white on #b71c1c"),
-             sg.Text("Judge Model:", size=(64, 1), justification="r"),
+             sg.Text("Judge Model:", size=(66, 1), justification="r"),
              sg.Combo([], key="-JUDGEMODEL-", size=(36, 1),
                       default_value=self._judge_model, readonly=True,
                       enable_events=True,
@@ -497,19 +497,21 @@ class App:
         table_models = sg.Table(
             values=[], headings=["Model", "Corr", "Tot", "Acc %",
                                  "Rel %", "Pend", "In tok", "Out tok"],
-            col_widths=[22, 5, 5, 6, 6, 5, 7, 7],
+            col_widths=[40, 5, 5, 6, 6, 5, 7, 7],
             auto_size_columns=False,
             # FreeSimpleGUI 5.0.0 default is justification='right' (all cols);
             # keep text col left, align numbers right.
             cols_justification=["l", "r", "r", "r", "r", "r", "r", "r"],
-            right_click_menu=["-", ["Delete results for this model"]],
+            right_click_menu=["-", ["Refresh details for this model",
+                                      "Delete results for this model"]],
             key="-MODELS-", num_rows=6,
             row_height=22, select_mode=sg.TABLE_SELECT_MODE_BROWSE,
+            enable_click_events=True,  # left-click fires ("-MODELS-","+CLICKED+",(row,col))
             expand_y=True)
 
         detail = sg.Col([
             [sg.Table(values=[], headings=["Category", "Corr", "Tot", "Acc %"],
-                      key="-CATS-", num_rows=6, col_widths=[48, 8, 8, 8],
+                      key="-CATS-", num_rows=6, col_widths=[30, 8, 8, 8],
                       auto_size_columns=False,
                       cols_justification=["l", "r", "r", "r"],
                       row_height=20, expand_x=True, expand_y=True,
@@ -616,16 +618,36 @@ class App:
         else:
             self._rcm_row = None
 
-    def _delete_model_results(self):
-        """Right-click menu: delete all results of the model under the cursor
-        (raw folder for the selected testset + scores.json entry)."""
-        rows = self._model_rows
+    def _rcm_target_row(self):
+        """Index of the models-table row the right-click menu was opened on
+        (the row under the cursor), falling back to the current selection.
+        Returns None if there is no valid target row."""
         i = self._rcm_row
         if i is None:  # fall back to the current selection
             sel = self.e["-MODELS-"].Get()
             i = sel[0] if isinstance(sel, list) and sel else (
                 sel if isinstance(sel, int) else None)
-        if i is None or not (0 <= i < len(rows)):
+        if i is None or not (0 <= i < len(self._model_rows)):
+            return None
+        return i
+
+    def _refresh_model_details(self):
+        """Right-click menu: refresh the detail (category) table for the model
+        under the cursor by re-reading its data from disk."""
+        i = self._rcm_target_row()
+        if i is None:
+            sg.popup("Select a model row first (left click).")
+            return
+        self.selected_model = str(self._model_rows[i][0])
+        self._refresh_cats()
+        self.log(f"[refresh] details for '{self.selected_model}'")
+
+    def _delete_model_results(self):
+        """Right-click menu: delete all results of the model under the cursor
+        (raw folder for the selected testset + scores.json entry)."""
+        rows = self._model_rows
+        i = self._rcm_target_row()
+        if i is None:
             sg.popup("Select a model row first (left click).")
             return
         name = str(rows[i][0])
@@ -1182,7 +1204,7 @@ class App:
 
     def _default_runs(self) -> int:
         cfg, _, _ = self._read_config()
-        return int((cfg or {}).get("runs_per_question", 10))
+        return int((cfg or {}).get("runs_per_question", 3))
 
     def judge_cmd(self, re_judge: bool):
         s = self._selected()
@@ -1326,6 +1348,8 @@ to date, not just at close time: FreeSimpleGUI destroys the tkinter
                 self._refresh_results()
             elif event == "Delete results for this model":
                 self._delete_model_results()
+            elif event == "Refresh details for this model":
+                self._refresh_model_details()
             elif event == "-RELOADCFG-":
                 self._refresh_models(keep=self.e["-MODEL-"].Get())
                 self._refresh_rbtokens()
@@ -1380,12 +1404,23 @@ to date, not just at close time: FreeSimpleGUI destroys the tkinter
             elif event == "-TESTSET-":
                 self.selected_model = None
                 self._refresh_results()
-            elif event == "-MODELS-":
-                idx = self.e["-MODELS-"].Get()
-                if idx and self._model_rows:
-                    i = idx[0] if isinstance(idx, list) else idx
-                    if 0 <= i < len(self._model_rows):
-                        self.selected_model = str(self._model_rows[i][0])
+            elif event == "-MODELS-" or (
+                    isinstance(event, tuple) and event
+                    and event[0] == "-MODELS-"):
+                # Left-click on a model row. FSG 5.x emits the tuple
+                # (key, '+CLICKED+', (row, col)) as the event -- never the bare
+                # key -- so match that form. Prefer the clicked row, then the
+                # current selection.
+                row = None
+                if (isinstance(event, tuple) and len(event) > 2
+                        and isinstance(event[2], (list, tuple))):
+                    row = event[2][0]
+                if row is None or row < 0:
+                    idx = self.e["-MODELS-"].Get()
+                    row = idx[0] if isinstance(idx, list) and idx else (
+                        idx if isinstance(idx, int) else None)
+                if row is not None and 0 <= row < len(self._model_rows):
+                    self.selected_model = str(self._model_rows[row][0])
                 self._refresh_cats()
 
 

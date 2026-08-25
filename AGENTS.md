@@ -1,6 +1,6 @@
 # BrainBench — MEMORY per le sessioni future
 
-Aggiornato: 2026-08-23. Questo file è il punto di partenza per una nuova sessione:
+Aggiornato: 2026-08-25. Questo file è il punto di partenza per una nuova sessione:
 leggi questo, poi `README.md` e `benchmark/config.yaml`.
 
 ## Cosa è
@@ -24,8 +24,8 @@ benchmark/
   gui.py             GUI FreeSimpleGUI (~970 righe)
   config.yaml        modelli, judge, run settings
   gui_config.json    stato GUI (finestra, llama_folder/versions, opzioni run) — generato
-data/                brainteasers.json (v1, 100 domande = 20 categorie × 5) + varianti cinesi
-results/<testset>/
+data/                brainteasers.json (set v3 English "hard set", 100 domande = 20 categorie × 5) + varianti cinesi
+results/<testset>/        testset: v3, v3_chinese (DEFAULT v3)
   raw/<modello_sanificato>/qNNN_runNN.json   risposte grezze
   scores.json                                       aggregazione
 scripts/             analyze_results.py, generate_analysis.py, verify_dataset.py
@@ -35,7 +35,7 @@ BrainBench-llama_GUI.jpg  screenshot GUI, embedded nel README.md
 ```
 
 ## Flusso dati e CLI (run_benchmark.py)
-- `--testset` (v1..v3, v3_chinese; in data/ esiste solo v1), `--model` (nome config),
+- `--testset` (solo `v3` e `v3_chinese`, DEFAULT `v3`), `--model` (nome config),
   `--model-name` (**nome display del GGUF**, distinto dal nome config: serve per
   usare lo stesso server llama.cpp con modelli diversi senza reload. Il server
   ignora `model_id` e risponde a `/v1/models` con il nome reale del GGUF).
@@ -71,7 +71,23 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
 `combo.Get()` (legge il widget live); per impostare la selezione programmatica
 `combo.update(value=str(v))`.
 
-### Quirk FreeSimpleGUI 5.0.0 (verificati, costosi)
+### Quirk FreeSimpleGUI 5.x (verificati, costosi)
+- **Versione installata: 5.2.0.post1** (ultima su PyPI; `pip show` la dice
+  giusta, ma `sg.__version__` nel sorgente dice 5.1.0 — stringa mai bumpata
+  da upstream, NON un marker di versione). 5.1.0→5.2.0.post1: solo
+  refactoring monolite `FreeSimpleGUI.py` → package `elements/*.py` + styling
+  RCM; **zero** cambi nella gestione eventi (classe Table, `_BuildResults`,
+  read loop, RCM: byte-identici, verificato diffando gli sdist).
+- **Click sinistro su `sg.Table` con `enable_click_events=True`**: l'evento è
+  la **tupla** `(key, '+CLICKED+', (row, col))`, NON la key nuda → un handler
+  `elif event == "-MODELS-":` NON scatta MAI (bug 12). Matchare con
+  `isinstance(event, tuple) and event and event[0] == "-MODELS-"`; la riga
+  cliccata è `event[2][0]` (header → -1; fuori riga → None → fallback
+  selezione `table.Get()`). Alternativa: `table.get_last_clicked_position()`.
+  **Test headless: `withdraw()` NON basta** — con finestra hidden la
+  geometria è finta (`selection()`/`Get()` → `[]`, row=None): per testare
+  click veri serve finestra VISIBLE + `tree.event_generate('<ButtonPress-1>',
+  x=..., y=...)` + `'<ButtonRelease-1>'` a coordinate reali (`tree.bbox(iid)`).
 - **Tutte le `key` SENZA dash**: `key="Models"` genera `-Models-`; scrivere
   `key="-MODEL-"` darebbe `--MODEL--`.
 - `sg.Table`: `selection_mode=sg.TABLE_MODE_BROWSE`, `enable_click_events=True`
@@ -135,6 +151,53 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
 - `.env` in radice per le chiavi API (guardare `.env.example`).
 
 ## Stato attuale (lasciato così alla chiusura della sessione)
+- **Testset → v3 + rename `results/v1` → `results/v3`** (2026-08-25): confermato che
+  `data/brainteasers.json` è il set **v3 English (hard set)** del report
+  (l'identificazione "v1" della GUI era errata). `git mv results/v1 results/v3`
+  (+ `.gitignore`: `results/v3/raw/`). In `run_benchmark.py`: `TESTSETS` ora ha
+  solo `v3` → (`brainteasers.json`, `brainteaser_categories.json`) e
+  `v3_chinese` → (`brainteasers_chinese.json`, `brainteaser_categories_chinese.json`),
+  `DEFAULT_TESTSET = "v3"` (v1/v2/v2_refined rimossi); la combo GUI mostra
+  solo `v3`/`v3_chinese` (li importa da `TESTSETS`). FIX `load_questions`:
+  `open(..., encoding="utf-8")` — senza, `brainteasers_chinese.json` crashava
+  su Windows (cp1252). `runs_per_question: 3` in config.yaml (era 10) e
+  fallback 3 in `gui._default_runs`.
+- **2 test locali in `results/v3/raw/`** (2026-08-25): `unsloth_qwen3.8-27b_Q4_K_S`
+  (nome di riferimento **qwen3.8-27b-UD-Q4_K_S**) e
+  `unsloth_qwen3.8-27b-mtp_IQ3_XXS` (riferimento
+  **qwen3.8-27b-UD-IQ3_XXS**): 300 raw ciascuno (100 domande × 3 run,
+  self-judge). Scopo dichiarato: verificare l'impatto della **bassa
+  quantizzazione** (GGUF unsloth, ~4-bit / ~3-bit) sulla capacità di
+  ragionamento. `scores.json`: Q4_K_S 234/300 (rel 0.73), IQ3_XXS 240/300
+  (rel 0.70). I nomi di riferimento vanno usati in report/README.
+- **`results/analysis.md` aggiornato** (2026-08-25): header (Generated
+  2026-08-25, 3 runs/question), leaderboard v3 EN con i 2 modelli locali
+  (rank 2 IQ3_XXS 80.0%, rank 3 Q4_K_S 78.0%) + link
+  huggingface.co/unsloth/Qwen3.8-27B-GGUF; §2 per-categoria con le 2 righe +
+  riga Average ricalcolata su 10 modelli, righe ordinate per Avg decrescente,
+  nota: Q4_K_S è l'unico con 100% su Wrong test conditions + Red herring
+  overload; §6 Universally Hard ricalcolato (Q50/Q91/Q95 escono: 20.0%),
+  Universally Easy invariata (10 modelli 100%); §7 2 righe + ordinata per gap;
+  §1 v1 Baseline Comparison rimossa; takeaway rinumerati (gap medio 9.8 pp).
+- **README.md aggiornato** (2026-08-25): link download build nella sezione
+  "Configuring the llama servers" (ggml: github.com/ggml-org/llama.cpp/releases,
+  unsloth: github.com/unslothai/llama.cpp/releases, turboquant:
+  github.com/AtomicBot-ai/atomic-llama-cpp-turboquant/releases); Key Results a
+  10 modelli + nota quantizzazione unsloth GGUF; tabella 20 categorie
+  ricalcolata su 10 modelli (più difficile: Wrong vantage point 38%); sezione
+  answer verification: judge locale selezionabile dalla GUI (combo
+  *Judge Model* → `judge.model_id`) o in config.yaml, con esempio yaml.
+- **Fix click sinistro + RCM refresh** (2026-08-25, gui.py): il click sinistro
+  sulla tabella Models non aggiornava la tabella dettagli perché l'evento è la
+  tupla `("-MODELS-","+CLICKED+",(row,col))` e l'handler matchava la key nuda
+  (bug 12). Fix: handler `-MODELS-` matcha anche la tupla, riga da
+  `event[2][0]` (fallback selezione), poi `_refresh_cats()`. Aggiunta voce
+  RCM **"Refresh details for this model"** (sopra "Delete results for this
+  model"): ri-legge da disco i dettagli del modello sulla riga sotto il
+  cursore → `_refresh_model_details()`; logica "riga sotto il cursore"
+  condivisa in `_rcm_target_row()` (riga cursore → fallback selezione), usata
+  sia da refresh che da delete. Verificato in GUI reale (finestra visibile):
+  click riga 1 → tupla → modello corretto → CATS 20 righe; RCM refresh ok.
 - **README fork** (2026-08-23): titolo `# BrainBench (llama fork)`; in cima la
   sezione `## This fork: GUI + local llama.cpp models` con le principali
   caratteristiche (one-click GUI, start/stop llama-server dalla GUI con build
@@ -166,7 +229,8 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
   il raw porta `reasoning_budget_tokens: 4096` + messaggio, thinking ~2200
   token (sotto budget → finisce naturale), judge (budget 1024) `correct=false`
   (il modello hedge "it depends" invece di "sail" — giudizio legittimo),
-  scores 0/1. Raw in `results/v1/raw/unsloth_qwen3.8-27b-mtp_Q3_K_XL/`.
+  scores 0/1. (Quella cartella raw non è più su disco: i risultati locali
+  correnti sono i 2 test GGUF sotto `results/v3/raw/`, vedi più sotto.)
 - Le 2 risposte vuote del modello non-MTP sono state eliminate (artefatto del
   vecchio max_tokens 1024). Per i test usare `unsloth/qwen3.8-27b-mtp:Q3_K_XL`
   (già in memoria: è il modello su cui gira la sessione pi — lo usa PI_MODEL).
@@ -273,6 +337,19 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
    righe vuote/solo-spazi scartate prima di dedup, file e tab;
    `_log_to_file` ora scrive solo (best-effort). Il testo reale passa
    intatto (solo newline di coda rimossi).
+12. **Click sinistro tabella Models: dettagli non aggiornati** (2026-08-25):
+   con `enable_click_events=True` il click sinistro fa scattare `_table_clicked`
+   che setta `LastButtonClicked = (key, '+CLICKED+', (row, col))` → `read()`
+   restituisce la TUPLA come event, mai la key nuda → l'handler
+   `elif event == "-MODELS-":` non scattava MAI e la tabella -CATS- restava
+   ferma. Fix: l'handler matcha anche `isinstance(event, tuple) and
+   event[0] == "-MODELS-"`, riga cliccata da `event[2][0]` (header → -1,
+   fuori riga → None; fallback selezione `Get()`), poi
+   `selected_model` + `_refresh_cats()`. Verificato in GUI reale
+   (finestra visibile, `event_generate` a coordinate reali): click riga 1 →
+   event `('-MODELS-','+CLICKED+',(1,0))` → modello giusto → CATS 20 righe.
+   Nota: `withdraw()` non basta per testare i click (geometria finta:
+   selection/Get vuoti) — serve finestra visible.
 
 ## Convenzioni di lavoro
 - L'utente parla italiano, rispondere in italiano.
@@ -283,6 +360,12 @@ Listbox, 2026-08-22): `readonly=True, enable_events=True`; a selection
   con marker unico in `reasoning_budget_message` (es. "PROBE-MARK: ... inizia
   la risposta con XYZ") — il modello ecoa il token SOLO se il messaggio è
   stato davvero iniettato; la seconda probe senza campo è il controllo.
-- Test GUI headless: `timeout 90 python -X utf8 - <<EOF` con `tk.Tk().withdraw()`,
-  poi chiudere con `app.win.TK.destroy()`.
+- Test GUI headless: `timeout 90 python -X utf8 - <<EOF` con `root.withdraw()`
+  (root = `app.win.TKroot`), poi chiudere con `app.win.TKroot.destroy()`
+  (l'attributo `.TK` NON esiste più in FSG 5.x → AttributeError).
+  **Per testare i CLICK sulle tabelle serve la finestra VISIBLE** (senza
+  `withdraw()`), perché con la finestra hidden la geometria è finta e
+  `selection()`/`Get()`/row restituiscono vuoto: usa
+  `tree.event_generate('<ButtonPress-1>', x=..., y=...)` +
+  `'<ButtonRelease-1>'` a coordinate reali (`tree.bbox(iid)`).
 - Dopo i test: `rm -rf benchmark/__pycache__`, `rm -f test_*.py` transienti.
